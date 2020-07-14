@@ -157,34 +157,34 @@ const addEmp = () => {
         type: "input",
         message: "What is the FIRST NAME of this new employee?",
         name: "first_name",
-        // validate: (value) => {
-        //     if ((value) !== '') {
-        //         return true;
-        //     }
-        //     console.log("Err: Please enter a DEPARTMENT NAME.");
-        //     return false;
-        // }
+        validate: (value) => {
+            if ((value) !== '') {
+                return true;
+            }
+            console.log("Err: Please enter a FIRST NAME.");
+            return false;
+        }
     }, {
         type: "input",
         message: "What is the LAST NAME of this new employee?",
         name: "last_name",
-        // validate: (value) => {
-        //     if ((value) !== '') {
-        //         return true;
-        //     }
-        //     console.log("Err: Please enter a DEPARTMENT NAME.");
-        //     return false;
-        // }
+        validate: (value) => {
+            if ((value) !== '') {
+                return true;
+            }
+            console.log("Err: Please enter a LAST NAME.");
+            return false;
+        }
     }, {
         type: "number",
         message: "What is the role id for this employee?",
         name: "roleID",
         // validate: function(value) {
         //     if (isNaN(value) === false) {
-        //       return true;
+        //         console.log("Err: Please enter a NUMBER for the role id.");
+        //         return false;
         //     }
-        //     console.log("Err: Please enter a NUMBER for the role id.");
-        //     return false;
+        //     return true;
         //   }
     }, {
         type: "number",
@@ -270,7 +270,8 @@ const readEmpByManager = () => {
                 init();
                 break;
             default:
-                connection.query(`SELECT * FROM employees WHERE manager_id === ${managerID}`, function (err, res) {
+                console.log(managerID);
+                connection.query(`SELECT * FROM employees WHERE manager_id = ${managerID}`, function (err, res) {
                     console.table(res);
                     console.log("===============================================\n You can find the requested information above.\n===============================================");
                     nowWhat();
