@@ -20,39 +20,213 @@ connection.connect(function (err) {
 // Init Function: Prompts the user to choose what they'd like to do
 const init = () => {
     inquirer.prompt([{
-        type: list,
-        message: "What would you like to do?",
-        choices: ["ADD a department, role, or employee", "VIEW a department, role, employee or utilized budget", "UPDATE assigned roles or managers", "DELETE a department, role, or employee from the tracker", "QUIT Tracker"],
-        name: initChoice
-    }]).then({ initChoice })
-    switch (initChoice) {
-        case "ADD a department, role, or employee":
-            create();
-            break;
-        case "VIEW a department, role, employee or utilized budget":
-            read();
-            break;
-        case "UPDATE assigned roles or managers":
-            update();
-            break;
-        case "DELETE a department, role, or employee from the tracker":
-            deleter();
-            break;
-        case "QUIT Tracker":
-            console.log("Thank you for using the Employee Tracker. Goodbye.");
-            connection.end();
-            break;
-    }
+        type: "list",
+        message: `EMPLOYEE TRACKER HOME: What would you like to do?`,
+        choices: ["ADD (department, role, or employee)", "VIEW (department, role, employee or utilized budget)", "UPDATE (assigned roles or managers)", "DELETE (department, role, or employee)", "QUIT Tracker"],
+        name: "initChoice"
+    }]).then(({ initChoice }) => {
+        switch (initChoice) {
+            case "ADD (department, role, or employee)":
+                create();
+                break;
+            case "VIEW (department, role, employee or utilized budget)":
+                read();
+                break;
+            case "UPDATE (assigned roles or managers)":
+                update();
+                break;
+            case "DELETE (department, role, or employee)":
+                deleter();
+                break;
+            case "QUIT Tracker":
+                console.log("Thank you for using the EMPLOYEE TRACKER. Goodbye.");
+                connection.end();
+                break;
+        }
+    })
 }
 
-// Create: dept, role, employee
-function create() {
+// CREATE Prompt: Add dept, role or employee?
+const create = () => {
     inquirer.prompt([{
-        type:list,
+        type: "list",
         message: "What would you like to ADD?",
-        choices: ["Department", "Role", "Employee"],
-        name: addChoice
-    }]).then ({addChoice})
+        choices: ["Department", "Role", "Employee", "Go Back"],
+        name: "addChoice"
+    }]).then(({ addChoice }) => {
+        switch (addChoice) {
+            case "Department":
+                addDept();
+                break;
+            case "Role":
+                addRole();
+                break;
+            case "Employee":
+                addEmp();
+                break;
+            case "Go Back":
+                init();
+                break;
+        }
+    })
+}
+// CREATE Functions
+const addDept = () => {
+    inquirer.prompt([{
+        type: "input",
+        message: "What is the new department's name?",
+        name: "deptName",
+        // validate: (value) => {
+        //     if ((value) !== '') {
+        //         return true;
+        //     }
+        //     console.log("Please enter a department name.");
+        //     return false;
+        // }
+    }]).then(({ deptName }) => {
+        connection.query(
+            "INSERT INTO departments SET ?",
+            {
+                name: deptName
+            },
+            function (err) {
+                if (err) throw err;
+                console.log("The new department was added successfully!");
+                init();
+            }
+        );
+    })
+}
+
+const addRole = () => {
+    inquirer.prompt([{
+        type: "input",
+        message: "What is the title of the new role?",
+        name: "title",
+        // validate: (value) => {
+        //     if ((value) !== '') {
+        //         return true;
+        //     }
+        //     console.log("Err: Please enter a DEPARTMENT NAME.");
+        //     return false;
+        // }
+    },{
+        type: "number",
+        message: "What is the salary of this role?",
+        name: "salary",
+        // validate: function(value) {
+        //     if (isNaN(value) === false) {
+        //       return true;
+        //     }
+        //     console.log("Err: Please enter a NUMBER for the salary.");
+        //     return false;
+        //   }
+    },{
+        type: "number",
+        message: "What is the department id for this role?",
+        name: "deptID",
+        // validate: function(value) {
+        //     if (isNaN(value) === false) {
+        //       return true;
+        //     }
+        //     console.log("Err: Please enter a NUMBER for the department id.");
+        //     return false;
+        //   }
+    }]).then((answers) => {
+        connection.query(
+            "INSERT INTO roles SET ?",
+            {
+                title: answers.title,
+                salary: answers.salary,
+                department_id: answers.deptID
+            },
+            function (err) {
+                if (err) throw err;
+                console.log("The new role was added successfully!");
+                init();
+            }
+        );
+    })
+}
+
+const addEmp = () => {
+    inquirer.prompt([{
+        type: "input",
+        message: "What is the FIRST NAME of this new employee?",
+        name: "first_name",
+        // validate: (value) => {
+        //     if ((value) !== '') {
+        //         return true;
+        //     }
+        //     console.log("Err: Please enter a DEPARTMENT NAME.");
+        //     return false;
+        // }
+    },{
+        type: "input",
+        message: "What is the LAST NAME of this new employee?",
+        name: "last_name",
+        // validate: (value) => {
+        //     if ((value) !== '') {
+        //         return true;
+        //     }
+        //     console.log("Err: Please enter a DEPARTMENT NAME.");
+        //     return false;
+        // }
+    },{
+        type: "number",
+        message: "What is the role id for this employee?",
+        name: "roleID",
+        // validate: function(value) {
+        //     if (isNaN(value) === false) {
+        //       return true;
+        //     }
+        //     console.log("Err: Please enter a NUMBER for the role id.");
+        //     return false;
+        //   }
+    },{
+        type: "number",
+        message: "What is the manager id for this employee?",
+        name: "managerID",
+        // validate: function(value) {
+        //     if (isNaN(value) === false) {
+        //       return true;
+        //     }
+        //     console.log("Err: Please enter a NUMBER for the manager id.");
+        //     return false;
+        //   }
+    }]).then((answers) => {
+        connection.query(
+            "INSERT INTO employee SET ?",
+            {
+                first_name: answers.first_name,
+                last_name: answers.last_name,
+                role_id: answers.roleID,
+                manager_id: answers.managerID
+            },
+            function (err) {
+                if (err) throw err;
+                console.log("The new employee was added successfully!");
+                init();
+            }
+        );
+    })
+}
+
+// READ Prompt: View dept, role or employee?
+const read = () => {
+    inquirer.prompt([{
+        type: "list",
+        message: "What would you like to VIEW?",
+        choices: ["Departments", "Roles", "Employees", "Go Back"],
+        name: "viewChoice"
+    }]).then(({ viewChoice }) => {
+        viewChoice === "Go Back"?init():connection.query("SELECT * FROM ?", {viewChoice}, function(err, res) {
+            if (err) throw err;
+            // Log all results of the SELECT statement
+            console.table(res);
+            init();
+        })
+    })
 }
 
 // Read: depts, roles, employees, employee by manager_id, combined salaries of employees in that department
