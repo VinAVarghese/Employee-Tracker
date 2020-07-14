@@ -17,11 +17,14 @@ connection.connect(function (err) {
     init();
 });
 
+// Managers array to track manager ids
+const managers = [];
+
 // Init Function: Prompts the user to choose what they'd like to do
 const init = () => {
     inquirer.prompt([{
         type: "list",
-        message: `EMPLOYEE TRACKER HOME: What would you like to do?`,
+        message: `EMPLOYEE TRACKER HOME:\nWhat would you like to do?`,
         choices: ["ADD (department, role, or employee)", "VIEW (department, role, employee or utilized budget)", "UPDATE (assigned roles or managers)", "DELETE (department, role, or employee)", "QUIT Tracker"],
         name: "initChoice"
     }]).then(({ initChoice }) => {
@@ -91,7 +94,7 @@ const addDept = () => {
             },
             function (err) {
                 if (err) throw err;
-                console.log("The new department was added successfully!");
+                console.log("===============================================\nThe new department was added successfully!\n===============================================");
                 init();
             }
         );
@@ -142,7 +145,7 @@ const addRole = () => {
             },
             function (err) {
                 if (err) throw err;
-                console.log("The new role was added successfully!");
+                console.log("===============================================\nThe new role was added successfully!\n===============================================");
                 init();
             }
         );
@@ -185,7 +188,7 @@ const addEmp = () => {
         //   }
     }, {
         type: "number",
-        message: "What is the manager id for this employee?",
+        message: "What is the manager's id for this employee?",
         name: "managerID",
         // validate: function(value) {
         //     if (isNaN(value) === false) {
@@ -205,7 +208,8 @@ const addEmp = () => {
             },
             function (err) {
                 if (err) throw err;
-                console.log("The new employee was added successfully!");
+                managers.push(answers.managerID)
+                console.log("===============================================\nThe new employee was added successfully!\n===============================================");
                 init();
             }
         );
@@ -255,13 +259,24 @@ const readThis = (viewChoice) => {
 
 const readEmpByManager = () => {
     inquirer.prompt({
-        type:number,
-        message:"Enter the manager's id",
-        name:managerID
-    }).then(({managerID}) => {
-        connection.query(`SELECT * FROM employees WHERE employees.manager_id === ${managerID}`, function (err,res){
-
-        });
+        type: "list",
+        message: "Choose employee(s) by manager id.",
+        choices: [...managers,"No Manager IDs Seen"],
+        name: "managerID"
+    }).then(({ managerID }) => {
+        switch (managerID){
+            case "No Manager IDs Seen":
+                console.log("===============================================\n It seems you saw no manager ids on file. We sent you back to the home screen. \n Please enter an employee that has a manager id assigned to them. \n===============================================");
+                init();
+                break;
+            default:
+                connection.query(`SELECT * FROM employees WHERE manager_id === ${managerID}`, function (err, res) {
+                    console.table(res);
+                    console.log("===============================================\n You can find the requested information above.\n===============================================");
+                    nowWhat();
+                });
+                break;
+        }
     });
 }
 
