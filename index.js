@@ -110,7 +110,7 @@ const addRole = () => {
         //     console.log("Err: Please enter a DEPARTMENT NAME.");
         //     return false;
         // }
-    },{
+    }, {
         type: "number",
         message: "What is the salary of this role?",
         name: "salary",
@@ -121,7 +121,7 @@ const addRole = () => {
         //     console.log("Err: Please enter a NUMBER for the salary.");
         //     return false;
         //   }
-    },{
+    }, {
         type: "number",
         message: "What is the department id for this role?",
         name: "deptID",
@@ -161,7 +161,7 @@ const addEmp = () => {
         //     console.log("Err: Please enter a DEPARTMENT NAME.");
         //     return false;
         // }
-    },{
+    }, {
         type: "input",
         message: "What is the LAST NAME of this new employee?",
         name: "last_name",
@@ -172,7 +172,7 @@ const addEmp = () => {
         //     console.log("Err: Please enter a DEPARTMENT NAME.");
         //     return false;
         // }
-    },{
+    }, {
         type: "number",
         message: "What is the role id for this employee?",
         name: "roleID",
@@ -183,7 +183,7 @@ const addEmp = () => {
         //     console.log("Err: Please enter a NUMBER for the role id.");
         //     return false;
         //   }
-    },{
+    }, {
         type: "number",
         message: "What is the manager id for this employee?",
         name: "managerID",
@@ -196,7 +196,7 @@ const addEmp = () => {
         //   }
     }]).then((answers) => {
         connection.query(
-            "INSERT INTO employee SET ?",
+            "INSERT INTO employees SET ?",
             {
                 first_name: answers.first_name,
                 last_name: answers.last_name,
@@ -212,23 +212,84 @@ const addEmp = () => {
     })
 }
 
-// READ Prompt: View dept, role or employee?
+// READ Prompt: View dept, role, employee, employee by manager or utilized department budget?
 const read = () => {
     inquirer.prompt([{
         type: "list",
         message: "What would you like to VIEW?",
-        choices: ["Departments", "Roles", "Employees", "Go Back"],
+        choices: ["Departments", "Roles", "Employees", "Employees by Manager", "Utilized Department Budget", "Go Back"],
         name: "viewChoice"
     }]).then(({ viewChoice }) => {
-        viewChoice === "Go Back"?init():connection.query("SELECT * FROM ?", {viewChoice}, function(err, res) {
-            if (err) throw err;
-            // Log all results of the SELECT statement
-            console.table(res);
-            init();
-        })
+        switch (viewChoice) {
+            case "Departments":
+                readThis(viewChoice);
+                break;
+            case "Roles":
+                readThis(viewChoice);
+                break;
+            case "Employees":
+                readThis(viewChoice);
+                break;
+            case "Employees by Manager":
+                readEmpByManager();
+                break;
+            case "Utilized Department Budget":
+                readUtilDeptBudget();
+                break;
+            case "Go Back":
+                init();
+                break;
+        }
+    })
+}
+// READ Functions
+const readThis = (viewChoice) => {
+    connection.query(`SELECT * FROM ${viewChoice}`, function (err, res) {
+        if (err) throw err;
+        // Log all results of the SELECT statement
+        console.table(res);
+        console.log("===============================================\n You can find the requested information above.\n===============================================");
+        nowWhat();
     })
 }
 
-// Read: depts, roles, employees, employee by manager_id, combined salaries of employees in that department
+const readEmpByManager = () => {
+    inquirer.prompt({
+        type:number,
+        message:"Enter the manager's id",
+        name:managerID
+    }).then(({managerID}) => {
+        connection.query(`SELECT * FROM employees WHERE employees.manager_id === ${managerID}`, function (err,res){
+
+        });
+    });
+}
+
+const readUtilDeptBudget = () => {
+
+}
+
+const nowWhat = () => {
+    inquirer.prompt([{
+        type: "list",
+        message: "What would you like to do next?",
+        choices: ["Go HOME", "VIEW (something else)", "QUIT Tracker"],
+        name: "nextChoice"
+    }]).then(({ nextChoice }) => {
+        switch (nextChoice) {
+            case "Go HOME":
+                init();
+                break;
+            case "VIEW (something else)":
+                read();
+                break;
+            case "QUIT Tracker":
+                console.log("Thank you for using the EMPLOYEE TRACKER. Goodbye.");
+                connection.end();
+                break;
+        }
+    })
+}
+
 // Update: employees.role_id, employees.manager_id
 // Delete: dept, role, employee
