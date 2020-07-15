@@ -313,7 +313,13 @@ const readEmpByManager = () => {
                     init();
                     break;
                 default:
-                    console.log(managerID);
+                        var chosenMana = managerID;
+                        for (var i = 0; i < emps.length; i++) {
+                            if ((emps[i].first_name + " " + emps[i].last_name) === answers.managerID) {
+                                chosenMana = emps[i];
+                            }
+                        }
+                        chosenMana === "None" ? chosenMana.id = null : console.log("\n");
                     connection.query(`SELECT * FROM employees WHERE manager_id = ${managerID}`, function (err, res) {
                         console.table(res);
                         console.log("===============================================\n You can find the requested information above.\n===============================================");
