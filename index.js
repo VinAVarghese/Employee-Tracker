@@ -165,68 +165,88 @@ const addRole = () => {
 }
 
 const addEmp = () => {
-    connection.query("SELECT * FROM employees INNER JOIN roles", function (err, res) {
+    connection.query("SELECT * FROM employees", function (err, emps) {
         if (err) throw err;
-        inquirer.prompt([{
-            type: "input",
-            message: "What is the FIRST NAME of this new employee?",
-            name: "first_name",
-            validate: (value) => {
-                if ((value) !== '') {
-                    return true;
+        connection.query("SELECT * FROM roles", function (err, rols) {
+            if (err) throw err;
+
+            inquirer.prompt([{
+                type: "input",
+                message: "What is the FIRST NAME of this new employee?",
+                name: "first_name",
+                validate: (value) => {
+                    if ((value) !== '') {
+                        return true;
+                    }
+                    console.log("Err: Please enter a FIRST NAME.");
+                    return false;
                 }
-                console.log("Err: Please enter a FIRST NAME.");
-                return false;
-            }
-        }, {
-            type: "input",
-            message: "What is the LAST NAME of this new employee?",
-            name: "last_name",
-            validate: (value) => {
-                if ((value) !== '') {
-                    return true;
+            }, {
+                type: "input",
+                message: "What is the LAST NAME of this new employee?",
+                name: "last_name",
+                validate: (value) => {
+                    if ((value) !== '') {
+                        return true;
+                    }
+                    console.log("Err: Please enter a LAST NAME.");
+                    return false;
                 }
-                console.log("Err: Please enter a LAST NAME.");
-                return false;
-            }
-        }, {
-            type: "list",
-            message: "What is this employee's role?",
-            choices: () => {
-                const empArr = [];
-                for (var i = 0; i < res.length; i++) {
-                    empArr.push(res[i].title);
-                }
-                return [...empArr, "GO BACK: I need to ADD a new role first"]
-            },
-            name: "roleID",
-        }, {
-            type: "list",
-            message: "Who is the manager for this employee?",
-            choice: () => {
-                const manaArr = [];
-                for (var i = 0; i < res.length; i++) {
-                    manaArr.push(res[i].name);
-                }
-                return [...manaArr, "None"]
-            },
-            name: "managerID",
-        }]).then((answers) => {
-            connection.query(
-                "INSERT INTO employees SET ?",
-                {
-                    first_name: answers.first_name,
-                    last_name: answers.last_name,
-                    role_id: answers.roleID,
-                    manager_id: answers.managerID
+            }, {
+                type: "list",
+                message: "What is this employee's role?",
+                choices: () => {
+                    const roleArr = [];
+                    for (var i = 0; i < rols.length; i++) {
+                        roleArr.push(rols[i].title);
+                    }
+                    return [...roleArr]
                 },
-                function (err) {
-                    if (err) throw err;
-                    managers.push(answers.managerID)
-                    console.log("===============================================\nThe new employee was added successfully!\n===============================================");
-                    init();
+                name: "roleID",
+            }, {
+                type: "list",
+                message: "Does this employee have a manager?",
+                choices: () => {
+                    const empArr = [];
+                    for (var i = 0; i < emps.length; i++) {
+                        empArr.push(emps[i].first_name + " " + emps[i].last_name);
+                    }
+                    return [...empArr, "None"]
+                },
+                name: "managerID",
+            }]).then((answers) => {
+                switch (answers) {
+                    default:
+                        var chosenRole;
+                        for (var i = 0; i < rols.length; i++) {
+                            if (rols[i].title === answers.roleID) {
+                                chosenRole = rols[i];
+                            }
+                        }
+                        var chosenMana = answers.managerID;
+                        for (var i = 0; i < emps.length; i++) {
+                            if ((emps[i].first_name + " " + emps[i].last_name) === answers.managerID) {
+                                chosenMana = emps[i];
+                            }
+                        }
+                        chosenMana === "None" ? chosenMana.id = null : console.log("\n");
+                        connection.query(
+                            "INSERT INTO employees SET ?",
+                            {
+                                first_name: answers.first_name,
+                                last_name: answers.last_name,
+                                role_id: chosenRole.id,
+                                manager_id: chosenMana.id
+                            },
+                            function (err) {
+                                if (err) throw err;
+                                console.log("===============================================\nThe new employee was added successfully!\n===============================================");
+                                init();
+                            }
+                        );
+                        break;
                 }
-            );
+            })
         })
     })
 }
@@ -273,26 +293,35 @@ const readThis = (viewChoice) => {
 }
 
 const readEmpByManager = () => {
-    inquirer.prompt({
-        type: "list",
-        message: "Choose employee(s) by manager id.",
-        choices: [...managers, "No Manager IDs Seen"],
-        name: "managerID"
-    }).then(({ managerID }) => {
-        switch (managerID) {
-            case "No Manager IDs Seen":
-                console.log("===============================================\n It seems you saw no manager ids on file. We sent you back to the home screen. \n Please enter an employee that has a manager id assigned to them. \n===============================================");
-                init();
-                break;
-            default:
-                console.log(managerID);
-                connection.query(`SELECT * FROM employees WHERE manager_id = ${managerID}`, function (err, res) {
-                    console.table(res);
-                    console.log("===============================================\n You can find the requested information above.\n===============================================");
-                    nowWhat();
-                });
-        }
-    });
+    connection.query("SELECT * FROM employees", function (err, emps) {
+        if (err) throw err;
+        inquirer.prompt({
+            type: "list",
+            message: "Choose employee(s) by manager.",
+            choices: () => {
+                const manaArr = [];
+                for (var i = 0; i < emps.length; i++) {
+                    manaArr.push(emps[i].first_name + " " + emps[i].last_name);
+                }
+                return [...manaArr, "Manager Option Not Here"]
+            },
+            name: "managerID"
+        }).then(({ managerID }) => {
+            switch (managerID) {
+                case "Manager Option Not Here":
+                    console.log("=========================================================\n It seems you did not see a manager option or the correct manager on file. We sent you back to the home screen. \n Here, you can assign managers in the UPDATE window or ADD a new employee to be assigned as a manager. \n=========================================================");
+                    init();
+                    break;
+                default:
+                    console.log(managerID);
+                    connection.query(`SELECT * FROM employees WHERE manager_id = ${managerID}`, function (err, res) {
+                        console.table(res);
+                        console.log("===============================================\n You can find the requested information above.\n===============================================");
+                        nowWhat();
+                    });
+            }
+        });
+    })
 }
 
 const readUtilDeptBudget = () => {
