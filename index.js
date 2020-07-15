@@ -307,5 +307,59 @@ const nowWhat = () => {
     })
 }
 
-// Update: employees.role_id, employees.manager_id
+// UPDATE Prompt: Update employees.role_id or employees.manager_id?
+const update = () => {
+    inquirer.prompt([{
+        type:"list",
+        message:"What would you like to UPDATE?",
+        choices: ["Update an employee's role","Update an employee's manager", "Go Back"],
+        name: "update"
+    }]).then (({update})=>{
+        switch (update) {
+            case "Update an employee's role":
+                updateRole();
+                break;
+            case "Update an employee's manager":
+                updateManager();
+                break;
+            case "Go Back":
+                init();
+                break;
+        }
+    })
+}
+//UPDATE Functions
+const updateRole = () => {
+    connection.query("SELECT * FROM employees", function (err,res) {
+        console.log(res);
+        if (err) throw err;
+        inquirer.prompt([{
+            type:"rawlist",
+            message: "Which employee would you like to update?",
+            choices: () => {
+                const choiceArr = [];
+                for (var i=0; i < res.length; i++){
+                    choiceArr.push(res[i].first_name + " " + res[i].last_name);
+                }
+                return choiceArr
+            },
+            name:"empChoice"
+        },{
+            type:"list",
+            message: "What would you like their role to changed to?",
+            name:"newRole"
+        }])
+    })
+}
+
 // Delete: dept, role, employee
+
+// TODO:
+// Figure out how to SELECT employees table AND roles table so the update function can inquirer which employee and which role to change to.
+// readEmpByManager
+    // Need to work on linking employee as manager and their id number as the manager_id value
+// readUtilDeptBudget
+// Update: employees.manager_id
+// Delete: dept, role, employee
+
+
