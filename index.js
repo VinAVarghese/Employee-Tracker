@@ -330,7 +330,33 @@ const readEmpByManager = () => {
 }
 
 const readUtilDeptBudget = () => {
+    connection.query("SELECT employees.first_name, employees.last_name, roles.title, roles.salary, departments.name FROM employees INNER JOIN roles ON (employees.role_id = roles.id) INNER JOIN departments ON (roles.department_id = departments.id)", function (err, res) {
+        if (err) throw err
+        inquirer.prompt([{
+            type: "list",
+            message: "Which department's utilized budget would you like to see?",
+            choices: () => {
+                const tempArr = [];
+                for (let i = 0; i < res.length; i++) {
+                    tempArr.push(res[i].name)
+                }
+                let deptArr = [...new Set(tempArr)];
+                return deptArr
+            },
+            name: "deptChoice"
+        }]).then(({ deptChoice }) => {
+            var salArr = [];
 
+            for (var i = 0; i < res.length; i++) {
+                if (res[i].name === deptChoice) {
+                    salArr.push(res[i].salary);
+                }
+            }
+            var utilBudget = salArr.reduce((total, num) => total + num);
+            console.log(`===============================================================\n The utilized budget for the ${deptChoice} department is $${utilBudget} \n===============================================================`);
+            nowWhat();
+        })
+    })
 }
 
 const nowWhat = () => {
@@ -378,46 +404,133 @@ const update = () => {
 }
 //UPDATE Functions
 const updateRole = () => {
-    connection.query("SELECT employees.role_id, employees.first_name, employees.last_name, roles.title, roles.id FROM employees INNER JOIN roles ON (employees.role_id = roles.id)", function (err, res) {
+    connection.query("SELECT * FROM employees", function (err, emps) {
+        if (err) throw err;
+        connection.query("SELECT * FROM roles", function (err, rols) {
+            if (err) throw err;
+            inquirer.prompt([{
+                type: "rawlist",
+                message: "Which employee would you like to update?",
+                choices: () => {
+                    const choiceArr = [];
+                    for (var i = 0; i < emps.length; i++) {
+                        choiceArr.push(emps[i].first_name + " " + emps[i].last_name);
+                    }
+                    return choiceArr
+                },
+                name: "empChoice"
+            }, {
+                type: "list",
+                message: "What would you like their new role to be?",
+                choices: () => {
+                    const roleArr = [];
+                    for (var i = 0; i < rols.length; i++) {
+                        roleArr.push(rols[i].title);
+                    }
+                    return roleArr
+                },
+                name: "newRole"
+            }]).then((answers) => {
+                var chosenRole;
+                for (var i = 0; i < rols.length; i++) {
+                    if (rols[i].title === answers.newRole) {
+                        chosenRole = rols[i];
+                    }
+                }
+                var chosenEmp;
+                for (var i = 0; i < emps.length; i++) {
+                    if ((emps[i].first_name + " " + emps[i].last_name) === answers.empChoice) {
+                        chosenEmp = emps[i];
+                    }
+                }
+                connection.query("UPDATE employees SET ? WHERE ?", [{ role_id: chosenRole.id }, { id: chosenEmp.id }], function (err) {
+                    if (err) throw err
+                })
+                console.log(`===================================================\n${answers.empChoice}'s role was successfully updated!\n===================================================`);
+                init();
+            })
+        })
+    })
+}
+
+const updateManager = () => {
+    connection.query("SELECT * FROM employees", function (err, emps) {
         if (err) throw err;
         inquirer.prompt([{
             type: "rawlist",
             message: "Which employee would you like to update?",
             choices: () => {
-                const choiceArr = [];
-                for (var i = 0; i < res.length; i++) {
-                    choiceArr.push(res[i].first_name + " " + res[i].last_name);
+                const empArr = [];
+                for (var i = 0; i < emps.length; i++) {
+                    empArr.push(emps[i].first_name + " " + emps[i].last_name);
                 }
-                return choiceArr
+                return empArr
             },
             name: "empChoice"
         }, {
             type: "list",
-            message: "What would you like their role to changed to?",
+            message: "Who will be their new manager?",
             choices: () => {
-                const roleArr = [];
-                for (var i = 0; i < res.length; i++) {
-                    roleArr.push(res[i].title);
+                const manaArr = [];
+                for (var i = 0; i < emps.length; i++) {
+                    manaArr.push(emps[i].first_name + " " + emps[i].last_name);
                 }
-                return roleArr
+                return manaArr
             },
-            name: "newRole"
-        }]).then(({ empChoice, newRole }) => {
-            console.log(empChoice);
-            console.log(newRole);
-            connection.query("UPDATE employees SET ? WHERE ?", [{}, {}])
+            name: "manaChoice"
+        }]).then((answers) => {
+            var newManager;
+            for (var i = 0; i < emps.length; i++) {
+                if ((emps[i].first_name + " " + emps[i].last_name) === answers.manaChoice) {
+                    newManager = emps[i];
+                }
+            }
+            var chosenEmp;
+            for (var i = 0; i < emps.length; i++) {
+                if ((emps[i].first_name + " " + emps[i].last_name) === answers.empChoice) {
+                    chosenEmp = emps[i];
+                }
+            }
+            connection.query("UPDATE employees SET ? WHERE ?", [{ manager_id: newManager.id }, { id: chosenEmp.id }], function (err) {
+                if (err) throw err
+            })
+            console.log(`===================================================================\n${answers.empChoice}'s manager was successfully updated to ${answers.manaChoice}!\n===================================================================`);
+            init();
         })
     })
 }
 
-// Delete: dept, role, employee
+// Delete Prompt: Delete dept, role, employee?
+const deleter = () => {
+    inquirer.prompt([{
+        type: "list",
+        message: "What would you like to DELETE from the tracker?",
+        choices: ["A department", "A role", "An employee", "Go Back"],
+        name: "addChoice"
+    }]).then(({ addChoice }) => {
+        switch (addChoice) {
+            case "A department":
+                deleteDept();
+                break;
+            case "A role":
+                deleteRole();
+                break;
+            case "An employee":
+                deleteEmp();
+                break;
+            case "Go Back":
+                init();
+                break;
+        }
+    })
+}
+// DELETE Functions
+
 
 // TODO:
-// Figure out how to SELECT employees table AND roles table so the update function can inquirer which employee and which role to change to.
-// readEmpByManager
-    // Need to work on linking employee as manager and their id number as the manager_id value
-// readUtilDeptBudget
-// Update: employees.manager_id
+// Figure out how to SELECT "employees" AND "roles" tables in their entirety
 // Delete: dept, role, employee
+// Figure out how to modularize
+// Explanation of SET use in readUtilDeptBudget()
 
 
