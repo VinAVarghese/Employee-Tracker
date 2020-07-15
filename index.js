@@ -330,8 +330,7 @@ const update = () => {
 }
 //UPDATE Functions
 const updateRole = () => {
-    connection.query("SELECT * FROM employees", function (err,res) {
-        console.log(res);
+    connection.query("SELECT employees.role_id, employees.first_name, employees.last_name, roles.title, roles.id FROM employees INNER JOIN roles ON (employees.role_id = roles.id)", function (err,res) {
         if (err) throw err;
         inquirer.prompt([{
             type:"rawlist",
@@ -347,8 +346,19 @@ const updateRole = () => {
         },{
             type:"list",
             message: "What would you like their role to changed to?",
+            choices: () => {
+                const roleArr = [];
+                for (var i=0; i < res.length; i++){
+                    roleArr.push(res[i].title);
+                }
+                return roleArr
+            }, 
             name:"newRole"
-        }])
+        }]).then (({empChoice, newRole}) => {
+            console.log(empChoice);
+            console.log(newRole);
+            connection.query("UPDATE employees SET ? WHERE ?",[{},{}])
+        })
     })
 }
 
