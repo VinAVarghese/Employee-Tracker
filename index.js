@@ -313,16 +313,15 @@ const readEmpByManager = () => {
                     init();
                     break;
                 default:
-                        var chosenMana = managerID;
-                        for (var i = 0; i < emps.length; i++) {
-                            if ((emps[i].first_name + " " + emps[i].last_name) === answers.managerID) {
-                                chosenMana = emps[i];
-                            }
+                    var chosenMana;
+                    for (var i = 0; i < emps.length; i++) {
+                        if ((emps[i].first_name + " " + emps[i].last_name) === managerID) {
+                            chosenMana = emps[i];
                         }
-                        chosenMana === "None" ? chosenMana.id = null : console.log("\n");
-                    connection.query(`SELECT * FROM employees WHERE manager_id = ${managerID}`, function (err, res) {
+                    }
+                    connection.query(`SELECT * FROM employees WHERE manager_id = ${chosenMana.id}`, function (err, res) {
                         console.table(res);
-                        console.log("===============================================\n You can find the requested information above.\n===============================================");
+                        console.log("====================================================\n You can find the requested information above.\n If blank, this employee is not assigned as a manager. \n You can go HOME and assign them in the UPDATE window.\n====================================================");
                         nowWhat();
                     });
             }
