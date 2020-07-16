@@ -528,9 +528,13 @@ const deleteDept = () => {
             name: "deptChoice"
         }]).then(({deptChoice})=>{
             connection.query("DELETE FROM departments WHERE ?", {name:deptChoice}, function (err,res) {
-                if (err) throw `===================================================================\nYou cannot delete ${deptChoice} because there are employees and roles assigned to it!\nTry deleting nested employees and roles first. \n===================================================================`
-                console.log(`===================================================================\n${deptChoice} was successfully deleted from the tracker!\n===================================================================`);
-                init();
+                if (err) {    
+                    console.log(`===================================================================\nYou cannot delete ${deptChoice} because there are employees and roles assigned to it!\nTry deleting nested employees and roles first. \n===================================================================`);
+                    deleter();
+                } else {
+                    console.log(`===================================================================\n${deptChoice} was successfully deleted from the tracker!\n===================================================================`);
+                    init();
+                }
             })
         })
     })
@@ -552,9 +556,13 @@ const deleteRole = () => {
             name: "roleChoice"
         }]).then(({roleChoice})=>{
             connection.query("DELETE FROM roles WHERE ?", {title:roleChoice}, function (err,res) {
-                if (err) throw `===================================================================\nYou cannot delete ${roleChoice} because there are employees assigned to it! \nTry deleting nested employees first.\n===================================================================`
-                console.log(`===================================================================\n${roleChoice} was successfully deleted from the tracker!\n===================================================================`);
-                init();
+                if (err) {
+                    console.log(`===================================================================\nYou cannot delete ${roleChoice} because there are employees assigned to it! \nTry deleting nested employees first.\n===================================================================`);
+                    deleter();
+                } else {
+                    console.log(`===================================================================\n${roleChoice} was successfully deleted from the tracker!\n===================================================================`);
+                    init();
+                }
             })
         })
     })
@@ -582,9 +590,13 @@ const deleteEmp = () => {
                 }
             }
             connection.query("DELETE FROM employees WHERE ?", {id:chosenEmp}, function (err,res) {
-                if (err) throw err
-                console.log(`===================================================================\n${empChoice} was successfully deleted from the tracker!\n===================================================================`);
-                init();
+                if (err) {
+                    console.log(`===================================================================\nYou cannot delete ${empChoice} because they are a manager with assigned employees! \nTry deleting their nested employees first.\n===================================================================`);
+                    deleter();
+                } else { 
+                    console.log(`===================================================================\n${empChoice} was successfully deleted from the tracker!\n===================================================================`);
+                    init();
+                }
             })
         })
     })
