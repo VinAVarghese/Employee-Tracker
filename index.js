@@ -22,14 +22,14 @@ const init = () => {
     inquirer.prompt([{
         type: "list",
         message: `EMPLOYEE TRACKER HOME:\nWhat would you like to do?`,
-        choices: ["ADD (department, role, or employee)", "VIEW (departments, roles, employees or utilized budgets)", "UPDATE (assigned roles or managers)", "DELETE (department, role, or employee)", "QUIT Tracker"],
+        choices: ["ADD (department, role, or employee)", "VIEW (employees or utilized budgets)", "UPDATE (assigned roles or managers)", "DELETE (department, role, or employee)", "QUIT Tracker"],
         name: "initChoice"
     }]).then(({ initChoice }) => {
         switch (initChoice) {
             case "ADD (department, role, or employee)":
                 create();
                 break;
-            case "VIEW (departments, roles, employees or utilized budgets)":
+            case "VIEW (employees or utilized budgets)":
                 read();
                 break;
             case "UPDATE (assigned roles or managers)":
@@ -256,18 +256,12 @@ const read = () => {
     inquirer.prompt([{
         type: "list",
         message: "What would you like to VIEW?",
-        choices: ["Departments", "Roles", "Employees", "Employees by Manager", "Utilized Department Budget", "Go Back"],
+        choices: ["All Employees", "Employees by Manager", "Utilized Department Budget", "Go Back"],
         name: "viewChoice"
     }]).then(({ viewChoice }) => {
         switch (viewChoice) {
-            case "Departments":
-                readThis(viewChoice);
-                break;
-            case "Roles":
-                readThis(viewChoice);
-                break;
-            case "Employees":
-                readThis(viewChoice);
+            case "All Employees":
+                readThis();
                 break;
             case "Employees by Manager":
                 readEmpByManager();
@@ -282,12 +276,12 @@ const read = () => {
     })
 }
 // READ Functions
-const readThis = (viewChoice) => {
-    connection.query(`SELECT * FROM ${viewChoice}`, function (err, res) {
+const readThis = () => {
+    connection.query(`SELECT employees.id, employees.first_name, employees.last_name, roles.title, roles.salary, departments.name AS department FROM employees INNER JOIN roles ON (roles.id = employees.role_id) INNER JOIN departments ON (departments.id = roles.department_id)`, function (err, res) {
         if (err) throw err;
         // Log all results of the SELECT statement
         console.table(res);
-        console.log("===============================================\n You can find the requested information above.\n===============================================");
+        console.log("===============================================\n You can find all employee information above.\n===============================================");
         nowWhat();
     })
 }
@@ -525,12 +519,91 @@ const deleter = () => {
     })
 }
 // DELETE Functions
+const deleteDept = () => {
+    connection.query("SELECT * FROM departments", function (err, res) {
+        if (err) throw err
+        inquirer.prompt([{
+            type: "list",
+            message: "Which department would you like to delete?",
+            choices: () => {
+                const deptArr = [];
+                for (var i = 0; i < res.length; i++) {
+                    deptArr.push(res[i].name);
+                }
+                return deptArr
+            },
+            name: "deptChoice"
+        }]).then(({deptChoice})=>{
+            connection.query("DELETE FROM departments WHERE ?", {name:deptChoice}, function (err,res) {
+                if (err) throw err
+                console.log(`===================================================================\n${deptChoice} was successfully deleted from the tracker!\n===================================================================`);
+                init();
+            })
+        })
+    })
+}
 
+const deleteRole = () => {
+    connection.query("SELECT * FROM roles", function (err, res) {
+        if (err) throw err
+        inquirer.prompt([{
+            type: "list",
+            message: "Which role would you like to delete?",
+            choices: () => {
+                const roleArr = [];
+                for (var i = 0; i < res.length; i++) {
+                    roleArr.push(res[i].title);
+                }
+                return roleArr
+            },
+            name: "roleChoice"
+        }]).then(({roleChoice})=>{
+            connection.query("DELETE FROM roles WHERE ?", {title:roleChoice}, function (err,res) {
+                if (err) throw err
+                console.log(`===================================================================\n${roleChoice} was successfully deleted from the tracker!\n===================================================================`);
+                init();
+            })
+        })
+    })
+}
+
+const deleteEmp = () => {
+    connection.query("SELECT * FROM employees", function (err, res) {
+        if (err) throw err
+        inquirer.prompt([{
+            type: "list",
+            message: "Which emp would you like to delete?",
+            choices: () => {
+                const empArr = [];
+                for (var i = 0; i < res.length; i++) {
+                    empArr.push(res[i].first_name + " " + res[i].last_name);
+                }
+                return empArr
+            },
+            name: "empChoice"
+        }]).then(({empChoice})=>{
+            var chosenEmp;
+            for (var i = 0; i < res.length; i++) {
+                if ((res[i].first_name + " " + res[i].last_name) === empChoice) {
+                    chosenEmp = res[i].id;
+                }
+            }
+            connection.query("DELETE FROM employees WHERE ?", {id:chosenEmp}, function (err,res) {
+                if (err) throw err
+                console.log(`===================================================================\n${empChoice} was successfully deleted from the tracker!\n===================================================================`);
+                init();
+            })
+        })
+    })
+}
 
 // TODO:
-// Figure out how to SELECT "employees" AND "roles" tables in their entirety
-// Delete: dept, role, employee
+// *note* if you can't get to fixing add and delete, just leave only deleteEmp function
+// ADD: only employee
+// DELETE: only employee
 // Figure out how to modularize
+// Figure out how to SELECT "employees" AND "roles" tables in their entirety
 // Explanation of SET use in readUtilDeptBudget()
+// Clean up prompts and logs for nicer ux
 
 
