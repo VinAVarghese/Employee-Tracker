@@ -24,7 +24,5 @@
   
   You are welcome to email me with any questions about the application with the subject line "RE: Employee Tracker"
   ## Links/Images
-  [Click For Deployed Application](#PlaceholderLink)
-
   ![Screenshot](screenshot.png)
   ![Screenshot2](screenshot2.png)
