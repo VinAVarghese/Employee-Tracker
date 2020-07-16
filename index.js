@@ -21,7 +21,7 @@ connection.connect(function (err) {
 const init = () => {
     inquirer.prompt([{
         type: "list",
-        message: `EMPLOYEE TRACKER HOME:\nWhat would you like to do?`,
+        message: `\n============================\nEMPLOYEE TRACKER HOME:\nWhat would you like to do?\n============================\n`,
         choices: ["ADD (department, role, or employee)", "VIEW (employees or utilized budgets)", "UPDATE (assigned roles or managers)", "DELETE (department, role, or employee)", "QUIT Tracker"],
         name: "initChoice"
     }]).then(({ initChoice }) => {
