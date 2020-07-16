@@ -601,9 +601,9 @@ const deleteEmp = () => {
 // *note* if you can't get to fixing add and delete, just leave only deleteEmp function
 // ADD: only employee
 // DELETE: only employee
-// Figure out how to modularize
+
+// Modularize to spread out code (figure out why init function won't export)
 // Figure out how to SELECT "employees" AND "roles" tables in their entirety
-// Explanation of SET use in readUtilDeptBudget()
 // Clean up prompts and logs for nicer ux
 
 
