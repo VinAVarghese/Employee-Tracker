@@ -116,13 +116,6 @@ const addRole = () => {
             type: "number",
             message: "What is the salary of this role?",
             name: "salary",
-            // validate: function(value) {
-            //     if (isNaN(value) === false) {
-            //       return true;
-            //     }
-            //     console.log("Err: Please enter a NUMBER for the department id.");
-            //     return false;
-            //   }
         }, {
             type: "list",
             message: "What is the department is this role in?",
@@ -277,7 +270,7 @@ const read = () => {
 }
 // READ Functions
 const readThis = () => {
-    connection.query(`SELECT employees.id, employees.first_name, employees.last_name, roles.title, roles.salary, departments.name AS department FROM employees INNER JOIN roles ON (roles.id = employees.role_id) INNER JOIN departments ON (departments.id = roles.department_id)`, function (err, res) {
+    connection.query(`SELECT employees.first_name, employees.last_name, roles.title, roles.salary, departments.name AS department FROM employees INNER JOIN roles ON (roles.id = employees.role_id) INNER JOIN departments ON (departments.id = roles.department_id) ORDER BY employees.first_name`, function (err, res) {
         if (err) throw err;
         // Log all results of the SELECT statement
         console.table(res);
@@ -313,7 +306,7 @@ const readEmpByManager = () => {
                             chosenMana = emps[i];
                         }
                     }
-                    connection.query(`SELECT * FROM employees WHERE manager_id = ${chosenMana.id}`, function (err, res) {
+                    connection.query(`SELECT employees.first_name, employees.last_name FROM employees WHERE manager_id = ${chosenMana.id}`, function (err, res) {
                         console.table(res);
                         console.log("====================================================\n You can find the requested information above.\n If blank, this employee is not assigned as a manager. \n You can go HOME and assign them in the UPDATE window.\n====================================================");
                         nowWhat();
@@ -535,7 +528,7 @@ const deleteDept = () => {
             name: "deptChoice"
         }]).then(({deptChoice})=>{
             connection.query("DELETE FROM departments WHERE ?", {name:deptChoice}, function (err,res) {
-                if (err) throw err
+                if (err) throw `===================================================================\nYou cannot delete ${deptChoice} because there are employees and roles assigned to it!\nTry deleting nested employees and roles first. \n===================================================================`
                 console.log(`===================================================================\n${deptChoice} was successfully deleted from the tracker!\n===================================================================`);
                 init();
             })
@@ -559,7 +552,7 @@ const deleteRole = () => {
             name: "roleChoice"
         }]).then(({roleChoice})=>{
             connection.query("DELETE FROM roles WHERE ?", {title:roleChoice}, function (err,res) {
-                if (err) throw err
+                if (err) throw `===================================================================\nYou cannot delete ${roleChoice} because there are employees assigned to it! \nTry deleting nested employees first.\n===================================================================`
                 console.log(`===================================================================\n${roleChoice} was successfully deleted from the tracker!\n===================================================================`);
                 init();
             })
@@ -597,13 +590,10 @@ const deleteEmp = () => {
     })
 }
 
+
+
 // TODO:
-// *note* if you can't get to fixing add and delete, just leave only deleteEmp function
-// ADD: only employee
-// DELETE: only employee
 
 // Modularize to spread out code (figure out why init function won't export)
-// Figure out how to SELECT "employees" AND "roles" tables in their entirety
-// Clean up prompts and logs for nicer ux
 
 
