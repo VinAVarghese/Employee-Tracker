@@ -591,7 +591,7 @@ const deleteEmp = () => {
             }
             connection.query("DELETE FROM employees WHERE ?", {id:chosenEmp}, function (err,res) {
                 if (err) {
-                    console.log(`===================================================================\nYou cannot delete ${empChoice} because they are a manager with assigned employees! \nTry deleting their nested employees first.\n===================================================================`);
+                    console.log(`===================================================================\nYou cannot delete ${empChoice} because they are a manager with assigned employees! \nTry reassigning new managers to nested employees first.\n===================================================================`);
                     deleter();
                 } else { 
                     console.log(`===================================================================\n${empChoice} was successfully deleted from the tracker!\n===================================================================`);
